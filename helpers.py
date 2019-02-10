@@ -21,7 +21,6 @@ def make_complexity_curve(clf, x, y,param_name,param_range,clf_name,dataset_name
     out_df = pd.DataFrame(out)
     out_df.set_index(param_name, inplace=True)
     out_df.name = title
-    out_df.to_csv('./output/complexity/{}_{}.csv'.format(title, clock()))
     return out_df
 
 def plot_result(result):
@@ -56,11 +55,10 @@ def make_timing_curve_from_param(clf, X, Y, param_name, param_range, clf_name, d
         out['train'][param] = clock() - st
         st = clock()
         clf.predict(X_test)
-        out['test'][param] = clock() - st
+        out['validation'][param] = clock() - st
     out_df = pd.DataFrame(out)
     out_df.name = title
     out_df.index.name = title
-    out_df.to_csv('./output/timing/{}_{}.csv'.format(title, clock()))
     return out_df
         
 def make_timing_curve_fixed(clf, X, Y, clf_name, dataset_name):
