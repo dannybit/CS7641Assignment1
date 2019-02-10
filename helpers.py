@@ -16,13 +16,16 @@ def make_complexity_curve(clf, x, y,param_name,param_range,clf_name,dataset_name
     validation_scores_mean = np.mean(validation_scores, axis=1)
     for pm in param_range:
         out['train'] = train_scores_mean
-        out['test'] = validation_scores_mean
+        out['validation'] = validation_scores_mean
     out[param_name] = param_range
     out_df = pd.DataFrame(out)
     out_df.set_index(param_name, inplace=True)
     out_df.name = title
     out_df.to_csv('./output/complexity/{}_{}.csv'.format(title, clock()))
     return out_df
+
+def plot_result(result):
+    result.plot(title=result.name)
 
 def make_timing_curve(clf, X, Y, clf_name, dataset_name):
     out = defaultdict(dict)
@@ -35,13 +38,31 @@ def make_timing_curve(clf, X, Y, clf_name, dataset_name):
         out['train'][train_size] = clock() - st
         st = clock()
         clf.predict(X_test)
-        out['test'][train_size] = clock() - st
+        out['validaiton'][train_size] = clock() - st
     out_df = pd.DataFrame(out)
     out_df.name = title
-    out_df.index.name = 'train_size'
+    out_df.index.name = title
     out_df.to_csv('./output/timing/{}_{}.csv'.format(title, clock()))
     return out_df
 
+def make_timing_curve_from_param(clf, X, Y, param_name, param_range, clf_name, dataset_name):
+    out = defaultdict(dict)
+    title = 'Model Timing Curve: {} - {} - {}'.format(clf_name, param_name, dataset_name)
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=456)
+    for param in param_range:
+        clf.set_params(**{param_name: param})
+        st = clock()
+        clf.fit(X_train, y_train)
+        out['train'][param] = clock() - st
+        st = clock()
+        clf.predict(X_test)
+        out['test'][param] = clock() - st
+    out_df = pd.DataFrame(out)
+    out_df.name = title
+    out_df.index.name = title
+    out_df.to_csv('./output/timing/{}_{}.csv'.format(title, clock()))
+    return out_df
+        
 def make_timing_curve_fixed(clf, X, Y, clf_name, dataset_name):
     out = defaultdict(dict)
     title = 'Model Timing Curve: {} - {}'.format(clf_name, dataset_name)
@@ -56,10 +77,10 @@ def make_timing_curve_fixed(clf, X, Y, clf_name, dataset_name):
         out['train'][train_size] = clock() - st
         st = clock()
         clf.predict(X_test)
-        out['test'][train_size] = clock() - st
+        out['validation'][train_size] = clock() - st
     out_df = pd.DataFrame(out)
     out_df.name = title
-    out_df.index.name = 'train_size'
+    out_df.index.name = title
     out_df.to_csv('./output/timing/{}_{}.csv'.format(title, clock()))
     return out_df
 
@@ -71,12 +92,12 @@ def make_learning_curve(clf, x, y,train_sizes,clf_name, dataset_name):
     train_scores_mean = np.mean(train_scores, axis=1)
     validation_scores_mean = np.mean(validation_scores, axis=1)
     out['train_sizes'] = train_sizes
-    out['train_scores_mean'] = train_scores_mean
-    out['validation_scores_mean'] = validation_scores_mean
+    out['train'] = train_scores_mean
+    out['validation'] = validation_scores_mean
     out_df = pd.DataFrame(out)
     out_df.name = title
     out_df.set_index('train_sizes', inplace=True)
-    out_df.index.name = 'train_size'
+    out_df.index.name = title
     return out_df
 
 def get_tree_max_depth(x, y):
